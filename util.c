@@ -1495,22 +1495,26 @@ static void nanosleep_abstime(struct timespec *ts_end)
  * from the beginning of the actual sleep, allowing scheduling delays to be
  * counted in the sleep. */
 #ifdef USE_BITMAIN_SOC
-void cgsleep_ms_r(cgtimer_t *ts_start, int ms)
+int cgsleep_ms_r(cgtimer_t *ts_start, int ms)
 {
 	struct timespec ts_end;
 
 	ms_to_timespec(&ts_end, ms);
 	timeraddspec(&ts_end, ts_start);
 	nanosleep_abstime(&ts_end);
+
+        return 0;
 }
 
-void cgsleep_us_r(cgtimer_t *ts_start, int64_t us)
+int64_t cgsleep_us_r(cgtimer_t *ts_start, int64_t us)
 {
 	struct timespec ts_end;
 
 	us_to_timespec(&ts_end, us);
 	timeraddspec(&ts_end, ts_start);
 	nanosleep_abstime(&ts_end);
+
+        return 0;
 }
 #else /* USE_BITMAIN_SOC */
 int cgsleep_ms_r(cgtimer_t *ts_start, int ms)
@@ -1622,15 +1626,17 @@ static void liSleep(LARGE_INTEGER *li, int timeout)
 	CloseHandle(hTimer);
 }
 
-void cgsleep_ms_r(cgtimer_t *ts_start, int ms)
+int cgsleep_ms_r(cgtimer_t *ts_start, int ms)
 {
 	LARGE_INTEGER li;
 
 	li.QuadPart = ts_start->QuadPart + (int64_t)ms * 10000LL;
 	liSleep(&li, ms);
+
+        return 0;
 }
 
-void cgsleep_us_r(cgtimer_t *ts_start, int64_t us)
+int64_t cgsleep_us_r(cgtimer_t *ts_start, int64_t us)
 {
 	LARGE_INTEGER li;
 	int ms;
@@ -1640,6 +1646,8 @@ void cgsleep_us_r(cgtimer_t *ts_start, int64_t us)
 	if (!ms)
 		ms = 1;
 	liSleep(&li, ms);
+
+        return 0;
 }
 #else /* WIN32 */
 static void cgsleep_spec(struct timespec *ts_diff, const struct timespec *ts_start)
@@ -1654,20 +1662,24 @@ static void cgsleep_spec(struct timespec *ts_diff, const struct timespec *ts_sta
 	nanosleep(ts_diff, NULL);
 }
 
-void cgsleep_ms_r(cgtimer_t *ts_start, int ms)
+int cgsleep_ms_r(cgtimer_t *ts_start, int ms)
 {
 	struct timespec ts_diff;
 
 	ms_to_timespec(&ts_diff, ms);
 	cgsleep_spec(&ts_diff, ts_start);
+
+        return 0;
 }
 
-void cgsleep_us_r(cgtimer_t *ts_start, int64_t us)
+int64_t cgsleep_us_r(cgtimer_t *ts_start, int64_t us)
 {
 	struct timespec ts_diff;
 
 	us_to_timespec(&ts_diff, us);
 	cgsleep_spec(&ts_diff, ts_start);
+
+        return 0;
 }
 #endif /* WIN32 */
 #endif /* CLOCK_MONOTONIC */
